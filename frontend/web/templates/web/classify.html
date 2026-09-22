@@ -1,10 +1,50 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Clasificar &middot; Punto Limpio{% endblock %}
+{% block title %}Clasificar residuo &middot; Punto Limpio{% endblock %}
 
 {% block content %}
-<section class="card">
-  <h1>Clasificar residuo</h1>
-  <p class="muted">La interfaz de camara se habilita en el siguiente commit.</p>
+<section class="card camera-card">
+  <header class="card-head">
+    <div>
+      <h1>Clasificar residuo</h1>
+      <p class="muted">
+        Centra el objeto en el recuadro, captura la foto y el modelo indicara el
+        contenedor correcto.
+      </p>
+    </div>
+  </header>
+
+  <div class="camera-stage">
+    <video id="camera" autoplay playsinline muted></video>
+    <img id="preview" alt="Vista previa de la captura" hidden>
+    <canvas id="snapshot" hidden></canvas>
+    <div id="camera-status" class="camera-status" data-tone="info" role="status">
+      Cargando...
+    </div>
+  </div>
+
+  <div class="camera-actions">
+    <button id="btn-start" class="btn btn-primary" type="button">Encender camara</button>
+    <button id="btn-capture" class="btn btn-primary" type="button" disabled>Capturar</button>
+    <button id="btn-retake" class="btn btn-ghost" type="button" hidden>Repetir</button>
+    <button id="btn-switch" class="btn btn-ghost" type="button">Girar camara</button>
+    <label class="btn btn-ghost file-btn">
+      Subir archivo
+      <input id="file-input" type="file" accept="image/*" capture="environment" hidden>
+    </label>
+    <button id="btn-stop" class="btn btn-ghost" type="button">Apagar</button>
+  </div>
+
+  <button id="btn-classify" class="btn btn-primary btn-block" type="button">
+    Clasificar residuo
+  </button>
+
+  <article id="result" class="result card" hidden></article>
 </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{% static 'js/camera.js' %}"></script>
+  <script src="{% static 'js/classify.js' %}"></script>
 {% endblock %}

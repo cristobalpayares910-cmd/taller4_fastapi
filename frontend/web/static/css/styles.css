@@ -155,7 +155,84 @@ input:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
 .messages li.error { background: #fdecea; border-color: #f5c2bd; }
 .messages li.warning { background: #fff8e6; border-color: #f3e0ab; }
 
+/* --- Captura de camara -------------------------------------------------- */
+
+.camera-card { padding: 1.75rem; }
+
+.card-head { display: flex; justify-content: space-between; gap: 1rem; }
+
+.camera-stage {
+  position: relative;
+  margin: 1.25rem 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #101713;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-stage video,
+.camera-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.camera-stage video.mirrored { transform: scaleX(-1); }
+
+.camera-status {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  background: rgba(16, 23, 19, 0.78);
+  color: #e8f2ec;
+}
+
+.camera-status[data-tone="error"] { background: rgba(168, 32, 26, 0.9); }
+.camera-status[data-tone="ok"] { background: rgba(22, 107, 58, 0.9); }
+.camera-status[data-tone="warn"] { background: rgba(150, 108, 15, 0.9); color: #fff; }
+
+.camera-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.file-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; }
+
+.result { margin-top: 1.25rem; background: #fbfdfc; }
+
+.result-header { display: flex; align-items: center; gap: 0.85rem; }
+.result-header strong { display: block; font-size: 1.15rem; }
+.result-header .muted { display: block; font-size: 0.9rem; }
+
+.bin-chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  flex: 0 0 auto;
+}
+
+.bin-chip[data-color="Blue"] { background: #1d6fd0; }
+.bin-chip[data-color="Yellow"] { background: #e8c11c; }
+.bin-chip[data-color="Green"] { background: #2f9a4f; }
+.bin-chip[data-color="Brown"] { background: #8a5a2b; }
+.bin-chip[data-color="Black"] { background: #2b2f2d; }
+.bin-chip[data-color="Red"] { background: #c0392b; }
+
+.small { font-size: 0.85rem; }
+
 @media (max-width: 520px) {
   .hero-actions { flex-direction: column; }
   .btn { text-align: center; }
+  .camera-actions { flex-direction: column; }
+  .camera-actions .btn { width: 100%; justify-content: center; }
 }
