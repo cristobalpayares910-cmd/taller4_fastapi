@@ -13,9 +13,15 @@ from app.config import settings
 from app.database import get_db
 from app.deps import get_current_user
 from app.ml import InvalidImageError, get_classifier
-from app.ml.labels import material_for_waste_type
+from app.ml.labels import MATERIALS, BinColor, build_bins_guide, material_for_waste_type
 from app.models import Classification, User
-from app.schemas import ClassifyResponse, TopPrediction
+from app.schemas import (
+    BinGuideItem,
+    BinsGuideResponse,
+    ClassifyResponse,
+    MaterialGuideItem,
+    TopPrediction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +123,47 @@ async def classify_waste(
         material=prediction.material,
         top_k=[TopPrediction(**item) for item in prediction.as_dict()["top_k"]],
         created_at=record.created_at,
+    )
+
+
+@router.get(
+    "/bins-guide",
+    response_model=BinsGuideResponse,
+    summary="Guia de reciclaje y colores de contenedor",
+    description=(
+        "Devuelve las instrucciones de reciclaje asociadas a cada contenedor "
+        "del Punto Limpio, mas una ficha por familia de material. "
+        "Endpoint publico: no requiere token."
+    ),
+)
+def read_bins_guide(
+    color: BinColor | None = Query(
+        default=None,
+        description="Filtra la guia por color de contenedor",
+    ),
+) -> BinsGuideResponse:
+    """Instrucciones de reciclaje, opcionalmente filtradas por color."""
+    bins = build_bins_guide()
+    if color is not None:
+        bins = [item for item in bins if item["bin_color"] == color.value]
+
+    materials = [
+        MaterialGuideItem(
+            material=material.key,
+            type=material.waste_type,
+            category=material.category.value,
+            bin_color=material.bin_color.value,
+            examples=list(material.examples),
+            instructions=material.instructions,
+        )
+        for material in MATERIALS.values()
+        if color is None or material.bin_color == color
+    ]
+
+    return BinsGuideResponse(
+        total_bins=len(bins),
+        bins=[BinGuideItem(**item) for item in bins],
+        materials=materials,
     )
 
 
