@@ -2,15 +2,18 @@
 # Dependencias livianas: aptas para el limite de tamano de Vercel Serverless
 # (< 250 MB). El modelo de deep learning es opcional, ver requirements-ml.txt.
 
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-python-multipart==0.0.20
-pydantic==2.10.4
-pydantic-settings==2.7.0
-email-validator==2.2.0
-SQLAlchemy==2.0.36
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.0.1
-pillow==11.0.0
-numpy==2.1.3
+# Rangos acotados: permiten reproducir el entorno sin forzar downgrades
+# cuando el sistema ya trae una version mayor de alguna libreria.
+
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.34
+python-multipart>=0.0.20
+pydantic>=2.10,<3
+pydantic-settings>=2.7,<3
+email-validator>=2.2
+SQLAlchemy>=2.0,<3
+python-jose[cryptography]>=3.3,<4
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.1,<5
+pillow>=11.0
+numpy>=2.0

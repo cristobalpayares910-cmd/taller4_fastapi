@@ -1,6 +1,6 @@
 # --- Frontend Django -----------------------------------------------------
 # Interfaz web, plantillas HTML5 y consumo de la API FastAPI.
 
-Django==5.1.4
-whitenoise==6.8.2
-httpx==0.28.1
+Django>=5.1,<7.0
+whitenoise>=6.8
+httpx>=0.28

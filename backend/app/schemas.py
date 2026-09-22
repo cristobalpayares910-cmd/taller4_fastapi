@@ -44,3 +44,40 @@ class Token(BaseModel):
     token_type: str = "bearer"
     expires_in: int = Field(..., description="Segundos de vigencia del token")
     user: UserOut
+
+
+# ---------------------------------------------------------------------------
+# Clasificacion de residuos
+# ---------------------------------------------------------------------------
+
+
+class TopPrediction(BaseModel):
+    """Alternativa secundaria devuelta junto al resultado principal."""
+
+    type: str = Field(..., examples=["Glass Bottle"])
+    confidence: float = Field(..., ge=0, le=1, examples=[0.14])
+
+
+class ClassifyResponse(BaseModel):
+    """Resultado de clasificar una fotografia de residuo."""
+
+    id: int | None = Field(
+        default=None, description="Identificador del registro en el historial"
+    )
+    category: str = Field(..., examples=["Recyclable"])
+    type: str = Field(..., examples=["Plastic Bottle"])
+    bin_color: str = Field(..., examples=["Blue"])
+    bin_name: str = Field(..., examples=["Contenedor azul (plasticos y latas)"])
+    instructions: str = Field(..., description="Como preparar el residuo")
+    confidence: float = Field(..., ge=0, le=1, examples=[0.93])
+    engine: str = Field(
+        ...,
+        description=(
+            "Motor de inferencia utilizado: `trashnet`, `mobilenet-imagenet` "
+            "o `heuristic` (respaldo por color)."
+        ),
+        examples=["mobilenet-imagenet"],
+    )
+    material: str = Field(..., examples=["plastic"])
+    top_k: list[TopPrediction] = Field(default_factory=list)
+    created_at: datetime | None = None

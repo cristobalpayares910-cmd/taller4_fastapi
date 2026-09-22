@@ -7,4 +7,4 @@
 # el backend degrada automaticamente a un clasificador heuristico de respaldo
 # (ver app/ml/classifier.py) y lo informa en el campo "engine" de la respuesta.
 
-tensorflow-cpu==2.18.0
+tensorflow-cpu>=2.18
