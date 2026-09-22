@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.routers import auth
 
 
 def create_app() -> FastAPI:
@@ -35,6 +36,9 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     def _on_startup() -> None:
         init_db()
+
+    # --- Routers de la API v1 --------------------------------------------
+    app.include_router(auth.router, prefix=settings.api_prefix)
 
     @app.get("/", tags=["Salud"], summary="Raiz del servicio")
     def root() -> dict:

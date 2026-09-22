@@ -11,9 +11,27 @@
     <a class="brand" href="{% url 'web:home' %}">
       <span class="brand-dot"></span> Punto Limpio
     </a>
+    <nav class="nav-links">
+      {% if is_authenticated %}
+        <a href="{% url 'web:classify' %}">Clasificar</a>
+        <span class="nav-user">{{ current_user.full_name|default:current_user.email }}</span>
+        <a href="{% url 'web:logout' %}">Salir</a>
+      {% else %}
+        <a href="{% url 'web:login' %}">Ingresar</a>
+        <a class="nav-cta" href="{% url 'web:register' %}">Crear cuenta</a>
+      {% endif %}
+    </nav>
   </header>
 
   <main class="container">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
     {% block content %}{% endblock %}
   </main>
 

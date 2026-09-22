@@ -8,5 +8,28 @@
   <p class="lead">
     Apunta la camara a un residuo y descubre en que contenedor va.
   </p>
+  <div class="hero-actions">
+    {% if is_authenticated %}
+      <a class="btn btn-primary" href="{% url 'web:classify' %}">Clasificar ahora</a>
+    {% else %}
+      <a class="btn btn-primary" href="{% url 'web:login' %}">Ingresar</a>
+      <a class="btn btn-ghost" href="{% url 'web:register' %}">Crear cuenta</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="features">
+  <article class="card">
+    <h3>1. Captura</h3>
+    <p class="muted">Usa la camara del dispositivo con <code>getUserMedia</code>.</p>
+  </article>
+  <article class="card">
+    <h3>2. Clasifica</h3>
+    <p class="muted">MobileNetV2 analiza la imagen en el backend FastAPI.</p>
+  </article>
+  <article class="card">
+    <h3>3. Deposita</h3>
+    <p class="muted">Te indicamos el color de contenedor correcto.</p>
+  </article>
 </section>
 {% endblock %}
