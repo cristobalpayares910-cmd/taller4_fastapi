@@ -2,8 +2,12 @@
 
 import logging
 
+from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import RequestDataTooBig
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from web import api_client
 from web.decorators import (
@@ -87,7 +91,100 @@ def logout_view(request):
     return redirect("web:home")
 
 
+# ---------------------------------------------------------------------------
+# Pantallas autenticadas
+# ---------------------------------------------------------------------------
+
+
+@ensure_csrf_cookie
 @login_required
 def classify_view(request):
-    """Pantalla principal de captura y clasificacion."""
-    return render(request, "web/classify.html")
+    """Pantalla de captura; incluye la guia de reciclaje traida de FastAPI."""
+    guide = None
+    try:
+        guide = api_client.fetch_bins_guide()
+    except api_client.ApiError as exc:
+        # La guia es informativa: si falla, la pantalla sigue siendo utilizable.
+        logger.warning("No se pudo obtener la guia de reciclaje: %s", exc.message)
+    return render(request, "web/classify.html", {"guide": guide})
+
+
+@login_required
+def history_view(request):
+    """Historial de clasificaciones renderizado en el servidor."""
+    if request.GET.get("format") == "json":
+        try:
+            records = api_client.fetch_history(request.session[SESSION_TOKEN_KEY])
+        except api_client.ApiError as exc:
+            return JsonResponse({"error": exc.message}, status=exc.status_code)
+        return JsonResponse({"results": records})
+
+    records, error = [], None
+    try:
+        records = api_client.fetch_history(request.session[SESSION_TOKEN_KEY])
+    except api_client.ApiError as exc:
+        error = exc.message
+        if exc.status_code == 401:
+            clear_session(request)
+            return redirect("web:login")
+    return render(request, "web/history.html", {"records": records, "error": error})
+
+
+# ---------------------------------------------------------------------------
+# Proxy hacia FastAPI (el navegador solo habla con Django)
+# ---------------------------------------------------------------------------
+
+
+def _proxy_error(exc: api_client.ApiError):
+    """Traduce un error de FastAPI a una respuesta JSON para el navegador."""
+    return JsonResponse({"error": exc.message}, status=exc.status_code)
+
+
+@login_required
+def classify_api_view(request):
+    """Recibe la imagen del navegador y la reenvia a FastAPI."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Metodo no permitido."}, status=405)
+
+    try:
+        upload = request.FILES.get("image")
+    except RequestDataTooBig:
+        limit_mb = settings.MAX_UPLOAD_BYTES // (1024 * 1024)
+        return JsonResponse(
+            {"error": f"La imagen supera el limite de {limit_mb} MB."}, status=413
+        )
+
+    if upload is None:
+        return JsonResponse({"error": "No se recibio ninguna imagen."}, status=400)
+
+    if upload.size == 0:
+        return JsonResponse({"error": "El archivo esta vacio."}, status=400)
+
+    if upload.size > settings.MAX_UPLOAD_BYTES:
+        limit_mb = settings.MAX_UPLOAD_BYTES // (1024 * 1024)
+        return JsonResponse(
+            {"error": f"La imagen supera el limite de {limit_mb} MB."}, status=413
+        )
+
+    try:
+        payload = api_client.classify_image(
+            request.session[SESSION_TOKEN_KEY],
+            upload.name,
+            upload.read(),
+            upload.content_type,
+        )
+    except api_client.ApiError as exc:
+        if exc.status_code == 401:
+            clear_session(request)
+        return _proxy_error(exc)
+
+    return JsonResponse(payload, status=201)
+
+
+@login_required
+def bins_guide_api_view(request):
+    """Expone la guia de reciclaje al navegador."""
+    try:
+        return JsonResponse(api_client.fetch_bins_guide())
+    except api_client.ApiError as exc:
+        return _proxy_error(exc)

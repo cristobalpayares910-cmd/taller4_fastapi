@@ -118,3 +118,38 @@ def login_user(email: str, password: str) -> dict:
 def fetch_profile(token: str) -> dict:
     """Obtiene el perfil asociado al token."""
     return _request("GET", "/api/v1/auth/me", token=token)
+
+
+# --- Clasificacion ---------------------------------------------------------
+# Margen extra sobre el timeout general: la primera inferencia carga el modelo.
+INFERENCE_TIMEOUT = max(settings.FASTAPI_TIMEOUT, 60)
+
+
+def classify_image(
+    token: str,
+    filename: str,
+    content: bytes,
+    content_type: str | None = None,
+) -> dict:
+    """Envia la imagen a FastAPI y devuelve la clasificacion."""
+    files = {
+        "file": (filename or "captura.jpg", content, content_type or "image/jpeg")
+    }
+    return _request(
+        "POST",
+        "/api/v1/classify-waste",
+        token=token,
+        files=files,
+        timeout=INFERENCE_TIMEOUT,
+    )
+
+
+def fetch_history(token: str, limit: int = 15) -> list[dict]:
+    """Historial de clasificaciones del usuario autenticado."""
+    return _request("GET", f"/api/v1/history?limit={limit}", token=token)
+
+
+# --- Guia de reciclaje (endpoint publico) ----------------------------------
+def fetch_bins_guide() -> dict:
+    """Guia de contenedores e instrucciones de reciclaje."""
+    return _request("GET", "/api/v1/bins-guide")

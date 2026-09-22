@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Historial &middot; Punto Limpio{% endblock %}
+
+{% block content %}
+<section class="card">
+  <h1>Historial de clasificaciones</h1>
+  <p class="muted">
+    Ultimos registros almacenados por el backend FastAPI para tu usuario.
+  </p>
+
+  {% if error %}
+    <ul class="messages"><li class="error">{{ error }}</li></ul>
+  {% elif records %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Residuo</th>
+          <th>Categoria</th>
+          <th>Contenedor</th>
+          <th>Confianza</th>
+          <th>Motor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records %}
+          <tr>
+            <td class="muted small">{{ record.created_at }}</td>
+            <td>{{ record.type }}</td>
+            <td>{{ record.category }}</td>
+            <td>
+              <span class="bin-chip inline" data-color="{{ record.bin_color }}"></span>
+              {{ record.bin_color }}
+            </td>
+            <td>{{ record.confidence|floatformat:2 }}</td>
+            <td class="muted small">{{ record.engine }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">Aun no registras clasificaciones.</p>
+  {% endif %}
+
+  <p><a class="btn btn-primary" href="{% url 'web:classify' %}">Clasificar un residuo</a></p>
+</section>
+{% endblock %}
