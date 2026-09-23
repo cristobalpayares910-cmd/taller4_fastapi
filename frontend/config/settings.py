@@ -130,7 +130,11 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # --- Integracion con el backend FastAPI ------------------------------------
 FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8001")
 FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "45"))
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(8 * 1024 * 1024)))
+# 4 MiB por defecto: las funciones de Vercel cortan el cuerpo de la peticion en
+# 4.5 MB, asi que un limite mayor nunca se alcanza y el usuario recibe un 413
+# opaco del proveedor en lugar del mensaje de error de la aplicacion. Debe ir
+# junto con MAX_UPLOAD_MB del backend.
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(4 * 1024 * 1024)))
 
 # Limites de carga aceptados por Django: el archivo se reenvia tal cual a
 # FastAPI, que vuelve a validar tamano y formato.

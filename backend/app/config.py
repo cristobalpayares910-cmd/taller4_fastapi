@@ -1,8 +1,21 @@
 """Configuracion central del backend, leida desde variables de entorno."""
 
+import os
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _default_database_url() -> str:
+    """SQLite escribible.
+
+    En Vercel el paquete desplegado es de solo lectura: el unico directorio
+    escribible es ``/tmp``. En local se usa un archivo junto al backend.
+    """
+    if os.getenv("VERCEL"):
+        return "sqlite:////tmp/punto_limpio.db"
+    return "sqlite:///./punto_limpio.db"
 
 
 class Settings(BaseSettings):
@@ -28,7 +41,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 480  # 8 h (una jornada de taller)
 
     # --- Base de datos ----------------------------------------------------
-    database_url: str = "sqlite:///./punto_limpio.db"
+    database_url: str = Field(default_factory=_default_database_url)
 
     # --- CORS -------------------------------------------------------------
     cors_origins: str = "http://127.0.0.1:8000,http://localhost:8000"
@@ -40,7 +53,9 @@ class Settings(BaseSettings):
     # un clasificador heuristico.
     trashnet_model_path: str = ""
     image_size: int = 224
-    max_upload_mb: int = 8
+    # 4 MiB, alineado con MAX_UPLOAD_BYTES del frontend y con el limite de
+    # 4.5 MB del cuerpo de las funciones de Vercel.
+    max_upload_mb: int = 4
     max_image_pixels: int = 4000  # redimensionado defensivo antes de inferir
 
     @property

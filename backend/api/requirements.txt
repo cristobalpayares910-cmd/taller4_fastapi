@@ -1,0 +1,9 @@
+# Vercel resuelve las dependencias desde el directorio de la funcion.
+# Se reutiliza el archivo del backend para no duplicar versiones.
+#
+# NOTA: TensorFlow (~600 MB) no cabe en el limite de 250 MB de las funciones
+# Serverless, por lo que el despliegue usa el clasificador heuristico de
+# respaldo. Para servir el modelo real, desplegar en un host con contenedores
+# (Render, Railway, Fly.io) e instalar requirements-ml.txt.
+
+-r ../requirements.txt

@@ -1,0 +1,3 @@
+# Vercel resuelve las dependencias desde el directorio de la funcion.
+# Se reutiliza el archivo del frontend para no duplicar versiones.
+-r ../requirements.txt
