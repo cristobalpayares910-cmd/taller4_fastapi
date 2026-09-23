@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Historial &middot; Punto Limpio{% endblock %}
+{% block title %}Historial — Punto Limpio{% endblock %}
 
 {% block content %}
 <section class="card">
-  <h1>Historial de clasificaciones</h1>
+  <h1>📋 Historial de clasificaciones</h1>
   <p class="muted">
-    Ultimos registros almacenados por el backend FastAPI para tu usuario.
+    Últimos registros almacenados por el backend FastAPI para tu usuario.
   </p>
 
   {% if error %}
@@ -17,7 +17,7 @@
         <tr>
           <th>Fecha</th>
           <th>Residuo</th>
-          <th>Categoria</th>
+          <th>Categoría</th>
           <th>Contenedor</th>
           <th>Confianza</th>
           <th>Motor</th>
@@ -40,9 +40,13 @@
       </tbody>
     </table>
   {% else %}
-    <p class="muted">Aun no registras clasificaciones.</p>
+    <div class="empty-state">
+      <span class="empty-state-icon">🗑️</span>
+      <p class="muted">Aún no registras clasificaciones.</p>
+      <p class="muted small">Captura tu primer residuo para comenzar a classificationar.</p>
+    </div>
   {% endif %}
 
-  <p><a class="btn btn-primary" href="{% url 'web:classify' %}">Clasificar un residuo</a></p>
+  <p><a class="btn btn-primary" href="{% url 'web:classify' %}">🌿 Clasificar un residuo</a></p>
 </section>
 {% endblock %}

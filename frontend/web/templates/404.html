@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada — Punto Limpio{% endblock %}
+
+{% block content %}
+<section class="card auth-card center">
+  <div class="empty-state">
+    <span class="empty-state-icon">🔍</span>
+    <h1>404</h1>
+    <p class="muted">La página que buscas no existe o fue movida.</p>
+    <p style="margin-top: 1.5rem;">
+      <a class="btn btn-primary" href="{% url 'web:home' %}">🏠 Volver al inicio</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

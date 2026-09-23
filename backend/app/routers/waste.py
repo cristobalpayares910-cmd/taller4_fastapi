@@ -3,8 +3,18 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -126,6 +136,28 @@ async def classify_waste(
     )
 
 
+@lru_cache(maxsize=1)
+def _full_guide() -> BinsGuideResponse:
+    """Guia completa. Es constante, por lo que se construye una sola vez."""
+    bins = build_bins_guide()
+    materials = [
+        MaterialGuideItem(
+            material=material.key,
+            type=material.waste_type,
+            category=material.category.value,
+            bin_color=material.bin_color.value,
+            examples=list(material.examples),
+            instructions=material.instructions,
+        )
+        for material in MATERIALS.values()
+    ]
+    return BinsGuideResponse(
+        total_bins=len(bins),
+        bins=[BinGuideItem(**item) for item in bins],
+        materials=materials,
+    )
+
+
 @router.get(
     "/bins-guide",
     response_model=BinsGuideResponse,
@@ -137,33 +169,23 @@ async def classify_waste(
     ),
 )
 def read_bins_guide(
+    response: Response,
     color: BinColor | None = Query(
         default=None,
         description="Filtra la guia por color de contenedor",
     ),
 ) -> BinsGuideResponse:
     """Instrucciones de reciclaje, opcionalmente filtradas por color."""
-    bins = build_bins_guide()
-    if color is not None:
-        bins = [item for item in bins if item["bin_color"] == color.value]
-
-    materials = [
-        MaterialGuideItem(
-            material=material.key,
-            type=material.waste_type,
-            category=material.category.value,
-            bin_color=material.bin_color.value,
-            examples=list(material.examples),
-            instructions=material.instructions,
-        )
-        for material in MATERIALS.values()
-        if color is None or material.bin_color == color
-    ]
+    guide = _full_guide()
+    if color is None:
+        # El resultado es identico entre peticiones: se permite cachearlo.
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        return guide
 
     return BinsGuideResponse(
-        total_bins=len(bins),
-        bins=[BinGuideItem(**item) for item in bins],
-        materials=materials,
+        total_bins=sum(1 for item in guide.bins if item.bin_color == color.value),
+        bins=[item for item in guide.bins if item.bin_color == color.value],
+        materials=[item for item in guide.materials if item.bin_color == color.value],
     )
 
 

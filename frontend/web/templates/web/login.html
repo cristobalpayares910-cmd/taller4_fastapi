@@ -1,27 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Ingresar &middot; Punto Limpio{% endblock %}
+{% block title %}Ingresar — Punto Limpio{% endblock %}
 
 {% block content %}
 <section class="card auth-card">
-  <h1>Ingresar</h1>
+  <h1>🔐 Ingresar</h1>
   <p class="muted">Accede para clasificar residuos y revisar tu historial.</p>
 
   <form method="post" novalidate>
     {% csrf_token %}
-    <label for="email">Correo electronico</label>
+    <label for="email">Correo electrónico</label>
     <input type="email" id="email" name="email" value="{{ email|default:'' }}"
-           autocomplete="email" required>
+           autocomplete="email" placeholder="tu@correo.com" required>
 
-    <label for="password">Contrasena</label>
+    <label for="password">Contraseña</label>
     <input type="password" id="password" name="password"
-           autocomplete="current-password" required>
+           autocomplete="current-password" placeholder="••••••••" required>
 
-    <button class="btn btn-primary" type="submit">Ingresar</button>
+    <button class="btn btn-primary btn-block" type="submit">🌿 Ingresar</button>
   </form>
 
+  <div class="separator"></div>
+
   <p class="muted center">
-    No tienes cuenta? <a href="{% url 'web:register' %}">Registrate</a>
+    ¿No tienes cuenta? <a href="{% url 'web:register' %}">Regístrate aquí</a>
   </p>
 </section>
 {% endblock %}

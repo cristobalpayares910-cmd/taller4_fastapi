@@ -1,35 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Punto Limpio &middot; Clasificador de residuos{% endblock %}
+{% block title %}Punto Limpio — Clasificador inteligente de residuos{% endblock %}
 
 {% block content %}
 <section class="hero">
-  <h1>Clasificador de residuos</h1>
+  <h1>♻️ Clasifica tus residuos</h1>
   <p class="lead">
-    Apunta la camara a un residuo y descubre en que contenedor va.
+    Apunta la cámara a un residuo y descubre en qué contenedor va.
+    Inteligencia artificial al servicio del medio ambiente.
   </p>
   <div class="hero-actions">
     {% if is_authenticated %}
-      <a class="btn btn-primary" href="{% url 'web:classify' %}">Clasificar ahora</a>
+      <a class="btn btn-primary" href="{% url 'web:classify' %}">🌿 Clasificar ahora</a>
     {% else %}
       <a class="btn btn-primary" href="{% url 'web:login' %}">Ingresar</a>
-      <a class="btn btn-ghost" href="{% url 'web:register' %}">Crear cuenta</a>
+      <a class="btn btn-ghost" href="{% url 'web:register' %}">🌱 Crear cuenta</a>
     {% endif %}
   </div>
 </section>
 
 <section class="features">
-  <article class="card">
+  <article class="feature-card">
+    <span class="feature-icon">📸</span>
     <h3>1. Captura</h3>
-    <p class="muted">Usa la camara del dispositivo con <code>getUserMedia</code>.</p>
+    <p class="muted">Usa la cámara del dispositivo para capturar el residuo en tiempo real.</p>
   </article>
-  <article class="card">
+  <article class="feature-card">
+    <span class="feature-icon">🧠</span>
     <h3>2. Clasifica</h3>
-    <p class="muted">MobileNetV2 analiza la imagen en el backend FastAPI.</p>
+    <p class="muted">MobileNetV2 analiza la imagen con inteligencia artificial en el backend.</p>
   </article>
-  <article class="card">
+  <article class="feature-card">
+    <span class="feature-icon">🗑️</span>
     <h3>3. Deposita</h3>
-    <p class="muted">Te indicamos el color de contenedor correcto.</p>
+    <p class="muted">Te indicamos el color de contenedor correcto para cada residuo.</p>
   </article>
 </section>
 {% endblock %}

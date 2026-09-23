@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Error interno — Punto Limpio{% endblock %}
+
+{% block content %}
+<section class="card auth-card center">
+  <div class="empty-state">
+    <span class="empty-state-icon">⚠️</span>
+    <h1>500</h1>
+    <p class="muted">Ocurrió un error inesperado. Si el problema persiste, revisa que el servicio
+      FastAPI esté en línea.</p>
+    <p style="margin-top: 1.5rem;">
+      <a class="btn btn-primary" href="{% url 'web:home' %}">🏠 Volver al inicio</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

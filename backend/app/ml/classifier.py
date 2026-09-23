@@ -251,8 +251,12 @@ class WasteClassifier:
             )
 
         if not material_scores:
-            # ImageNet no reconocio nada reciclable: se clasifica por color.
-            return self._predict_heuristic(image)
+            # ImageNet no reconocio nada recyclable: decide la heuristica y el
+            # campo engine debe decirlo (no se puede presentar un resultado
+            # heuristico como algo que classifico el modelo).
+            prediction = self._predict_heuristic(image)
+            prediction.engine = "heuristic"
+            return prediction
 
         ranked = sorted(material_scores.items(), key=lambda item: item[1], reverse=True)
         best_key, confidence = ranked[0]
@@ -334,8 +338,10 @@ class WasteClassifier:
         sat = features["mean_sat"]
         bright = features["brightness"]
 
-        # Papel: muy luminoso y practicamente sin color.
-        if bright > 0.72 and sat < 0.16:
+        # Papel: luminoso y practicamente sin color (un fondo claro con
+        # objetos oscuros dominantes baja el brillo medio de la escena, por
+        # eso el umbral no puede ser solo 0.72).
+        if bright > 0.60 and sat < 0.16:
             return "paper", 0.52
         # Carton: tono marron/naranja con luminosidad media.
         if 0.02 <= hue <= 0.14 and 0.18 <= sat <= 0.62 and 0.25 <= bright <= 0.84:
@@ -358,8 +364,10 @@ class WasteClassifier:
         # Superficies oscuras y planas: residuo de rechazo.
         if bright < 0.25:
             return "trash", 0.38
-        # Grisaceo luminoso: metales sin pintar.
-        if sat < 0.12 and features["contrast"] > 0.12:
+        # Grisaceo luminoso de tono medio: metales sin pintar. Un escenario
+        # blanco (papel, pared) ya se resolvio arriba como paper; sin este
+        # techo de brillo cualquier fondo claro caia en "Aluminum Can".
+        if sat < 0.12 and features["contrast"] > 0.12 and bright <= 0.60:
             return "metal", 0.36
         return "trash", 0.32
 

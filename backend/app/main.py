@@ -6,12 +6,16 @@ Arquitectura del proyecto:
 """
 
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.errors import register_exception_handlers
+from app.middleware import ProcessTimeMiddleware, StaticCacheMiddleware
 from app.ml import get_classifier
 from app.routers import auth, waste
 
@@ -59,6 +63,18 @@ TAGS_METADATA = [
 ]
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Prepara base de datos y modelo antes de aceptar trafico."""
+    init_db()
+    try:
+        get_classifier().warm_up()
+    except Exception:  # el servicio debe arrancar aunque el modelo falle
+        logger.exception("No se pudo precalentar el clasificador")
+    yield
+    logger.info("Deteniendo %s", settings.app_name)
+
+
 def create_app() -> FastAPI:
     """Construye y configura la instancia de FastAPI."""
     app = FastAPI(
@@ -66,17 +82,16 @@ def create_app() -> FastAPI:
         version=settings.app_version,
         description=DESCRIPTION,
         summary="Clasificacion de residuos con MobileNetV2",
-        contact={
-            "name": "Equipo Taller 4",
-            "url": "https://github.com/",
-        },
+        contact={"name": "Equipo Taller 4", "url": "https://github.com/"},
         license_info={"name": "MIT"},
         openapi_tags=TAGS_METADATA,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
+        lifespan=lifespan,
     )
 
+    # El ultimo middleware agregado queda mas al exterior de la cadena.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -84,15 +99,11 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(GZipMiddleware, minimum_size=600)
+    app.add_middleware(ProcessTimeMiddleware)
+    app.add_middleware(StaticCacheMiddleware, max_age=3600)
 
-    @app.on_event("startup")
-    def _on_startup() -> None:
-        """Prepara base de datos y modelo antes de atender trafico."""
-        init_db()
-        try:
-            get_classifier().warm_up()
-        except Exception:  # la API debe arrancar aunque el modelo falle
-            logger.exception("No se pudo precalentar el clasificador")
+    register_exception_handlers(app)
 
     # --- Routers de la API v1 --------------------------------------------
     app.include_router(auth.router, prefix=settings.api_prefix)
@@ -114,6 +125,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "model_engine": classifier.engine,
             "model_loaded": classifier.is_ready,
+            "load_error": classifier.load_error,
         }
 
     return app

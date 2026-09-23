@@ -10,6 +10,27 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def load_dotenv(path: Path) -> None:
+    """Carga un archivo .env sin dependencias externas.
+
+    Las variables ya presentes en el entorno tienen prioridad, de modo que en
+    Vercel siempre gana la configuracion del panel.
+    """
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip("'\"")
+        if key and not os.getenv(key):
+            os.environ[key] = value
+
+
+load_dotenv(BASE_DIR / ".env")
+
+
 def env_bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, "1" if default else "0").lower() in {"1", "true", "yes", "on"}
 
@@ -74,12 +95,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# Django no persiste nada propio: los usuarios viven en la base de datos
-# de FastAPI. Se mantiene SQLite solo para completar la configuracion.
+# Django no persiste nada propio: los usuarios viven en la base de datos de
+# FastAPI y la sesion en una cookie firmada. Se mantiene SQLite solo para
+# completar la configuracion. En Vercel el unico directorio escribible es /tmp.
+_DB_DIR = Path("/tmp") if os.getenv("VERCEL") else BASE_DIR
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "django_local.sqlite3",
+        "NAME": _DB_DIR / "django_local.sqlite3",
     }
 }
 
@@ -107,3 +131,8 @@ WHITENOISE_AUTOREFRESH = DEBUG
 FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8001")
 FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "45"))
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(8 * 1024 * 1024)))
+
+# Limites de carga aceptados por Django: el archivo se reenvia tal cual a
+# FastAPI, que vuelve a validar tamano y formato.
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_BYTES + 512 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
