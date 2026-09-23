@@ -14,7 +14,7 @@ def load_dotenv(path: Path) -> None:
     """Carga un archivo .env sin dependencias externas.
 
     Las variables ya presentes en el entorno tienen prioridad, de modo que en
-    Vercel siempre gana la configuracion del panel.
+    Railway siempre gana la configuracion del servicio (panel o railway.json).
     """
     if not path.exists():
         return
@@ -46,8 +46,8 @@ DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "*" if DEBUG else "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
 
-# En Vercel solo existen funciones serverless: la sesion firmada en cookie
-# evita depender de una base de datos persistente.
+# La sesion firmada en cookie evita depender de una base de datos: el estado
+# del usuario vive en FastAPI y la cookie solo guarda el JWT.
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -97,8 +97,9 @@ ASGI_APPLICATION = "config.asgi.application"
 
 # Django no persiste nada propio: los usuarios viven en la base de datos de
 # FastAPI y la sesion en una cookie firmada. Se mantiene SQLite solo para
-# completar la configuracion. En Vercel el unico directorio escribible es /tmp.
-_DB_DIR = Path("/tmp") if os.getenv("VERCEL") else BASE_DIR
+# completar la configuracion. En Railway, si hay volumen montado, la base
+# vive dentro de el y sobrevive a los despliegues.
+_DB_DIR = Path("/app/data") if os.getenv("RAILWAY_VOLUME") else BASE_DIR
 
 DATABASES = {
     "default": {
@@ -130,11 +131,10 @@ WHITENOISE_AUTOREFRESH = DEBUG
 # --- Integracion con el backend FastAPI ------------------------------------
 FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://127.0.0.1:8001")
 FASTAPI_TIMEOUT = float(os.getenv("FASTAPI_TIMEOUT", "45"))
-# 4 MiB por defecto: las funciones de Vercel cortan el cuerpo de la peticion en
-# 4.5 MB, asi que un limite mayor nunca se alcanza y el usuario recibe un 413
-# opaco del proveedor en lugar del mensaje de error de la aplicacion. Debe ir
-# junto con MAX_UPLOAD_MB del backend.
-MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(4 * 1024 * 1024)))
+# 25 MiB por defecto, alineado con MAX_UPLOAD_MB del backend. Debe ir junto
+# con esa variable para que el mensaje de error de la aplicacion llegue antes
+# que un 413 opaco del proveedor.
+MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(25 * 1024 * 1024)))
 
 # Limites de carga aceptados por Django: el archivo se reenvia tal cual a
 # FastAPI, que vuelve a validar tamano y formato.

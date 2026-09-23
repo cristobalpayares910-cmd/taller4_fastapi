@@ -1,0 +1,18 @@
+# Entorno y secretos: nunca se copian a la imagen.
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Pruebas y artefactos locales
+tests/
+staticfiles/
+*.sqlite3
+
+# Config de Railway (no pertenece a la imagen)
+Dockerfile
+.dockerignore
+railway.json

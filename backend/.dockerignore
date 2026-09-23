@@ -1,0 +1,25 @@
+# Entorno y secretos: nunca se copian a la imagen.
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Pruebas y artefactos locales
+tests/
+*.db
+*.sqlite3
+
+# Pesos de ML (se montan o descargan en runtime, no en la imagen)
+*.h5
+*.keras
+*.onnx
+*.pt
+models/
+
+# Config de Railway (no pertenece a la imagen)
+Dockerfile
+.dockerignore
+railway.json

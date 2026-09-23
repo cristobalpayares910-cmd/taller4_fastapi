@@ -28,10 +28,13 @@ models/*.h5
 # Entorno
 .env
 .env.local
-.vercel
+.railway
 
 # Sistema operativo / editor
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+
+# Metadatos de herramientas
+.freebuff/

@@ -10,7 +10,7 @@ El servicio intenta, en este orden, usar el motor mas potente disponible:
                           residuos (ver ``labels.IMAGENET_KEYWORD_TO_MATERIAL``).
 3. ``heuristic``       -> clasificador de respaldo basado en color/brillo.
                           Se usa cuando TensorFlow no esta instalado (p. ej. en
-                          Vercel Serverless por el limite de tamano) o cuando el
+                          la imagen Docker ligera del backend) o cuando el
                           modelo no pudo inicializarse.
 
 El motor efectivamente usado se informa en el campo ``engine`` de la respuesta,

@@ -1,4 +1,4 @@
-"""WSGI entrypoint (usado tambien por Vercel Serverless)."""
+"""WSGI entrypoint (usado por gunicorn en Railway y por runserver en local)."""
 
 import os
 

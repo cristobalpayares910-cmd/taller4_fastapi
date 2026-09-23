@@ -17,7 +17,7 @@ la cámara del dispositivo y responde con la categoría, el tipo de residuo y el
 | Backend | **FastAPI** — inferencia del modelo, validación con **Pydantic v2** y **Swagger** en `/docs` |
 | Autenticación | Login/Password con **JWT** (bcrypt + python-jose) |
 | Base de datos | SQLite + SQLAlchemy 2.x |
-| Despliegue | **Vercel** Serverless Functions (`vercel.json`) |
+| Despliegue | **Railway** — 2 servicios Docker (FastAPI + Django) con `railway.json` |
 
 ## 🏗️ Arquitectura
 
@@ -34,7 +34,8 @@ el token ni necesita CORS.
 ```
 .
 ├── backend/                    # API FastAPI
-│   ├── api/index.py            # entrypoint Serverless (Vercel)
+│   ├── Dockerfile              # imagen de produccion (Railway)
+│   ├── railway.json            # config as code del servicio
 │   ├── app/
 │   │   ├── main.py             # app factory, middlewares, Swagger
 │   │   ├── config.py           # settings por variables de entorno
@@ -50,7 +51,8 @@ el token ni necesita CORS.
 │   ├── requirements.txt
 │   └── requirements-ml.txt     # TensorFlow (opcional, solo local)
 ├── frontend/                   # Cliente Django
-│   ├── api/index.py            # entrypoint Serverless (Vercel)
+│   ├── Dockerfile              # imagen de produccion (Railway)
+│   ├── railway.json            # config as code del servicio
 │   ├── config/                 # settings, urls, wsgi, asgi
 │   ├── web/
 │   │   ├── views.py            # páginas + proxy JSON hacia FastAPI
@@ -59,8 +61,6 @@ el token ni necesita CORS.
 │   │   ├── templates/
 │   │   └── static/{css,js}/    # styles.css, camera.js, classify.js, api.js
 │   └── tests/
-├── scripts/build_vercel.sh
-└── vercel.json
 ```
 
 ---
@@ -172,8 +172,8 @@ no presentar resultados como algo que no son:
    reconocidas se traducen a familias de residuos mediante un mapeo semántico
    (p. ej. `water_bottle → plastic`, `wine_bottle → glass`).
 3. **`heuristic`** — respaldo determinista por color, saturación y brillo. Se usa
-   cuando TensorFlow no está instalado, como ocurre en Vercel Serverless
-   (límite de ~250 MB por función).
+   cuando TensorFlow no está instalado, como ocurre en la imagen Docker
+   por defecto del backend (ver `requirements-ml.txt`).
 
 ---
 
@@ -204,72 +204,77 @@ por un módulo ausente:
 
 ---
 
-## ☁️ Despliegue en Vercel
+## ☁️ Despliegue en Railway
 
-`vercel.json` define dos funciones Serverless Python y el enrutamiento:
+Monorepo con **dos servicios** en un mismo proyecto de Railway. Cada uno se
+construye desde su propio Dockerfile con la config de `railway.json`:
 
-```json
-"routes": [
-  { "src": "/api/v1/(.*)", "dest": "backend/api/index.py" },
-  { "src": "/(docs|redoc|openapi.json|health)", "dest": "backend/api/index.py" },
-  { "src": "/(.*)", "dest": "frontend/api/index.py" }
-]
-```
+| Servicio | Raíz | Dockerfile | Healthcheck |
+|----------|------|------------|-------------|
+| API FastAPI | `backend/` | `backend/Dockerfile` | `GET /health` |
+| Web Django | `frontend/` | `frontend/Dockerfile` | `GET /healthz` |
 
-```bash
-npm i -g vercel
-vercel            # preview
-vercel --prod     # producción
-```
+### Pasos
 
-### Variables de entorno obligatorias en Vercel
+1. Crea un proyecto en <https://railway.app> (**New Project → Deploy from
+   GitHub repo**) y selecciona este repositorio.
+2. Railway detecta el monorepo: crea **dos servicios** apuntando al mismo repo
+   con distinta **Root Directory** (`backend` y `frontend`). La configuración
+   de build/deploy se toma de los `railway.json` de cada carpeta.
+3. Genera dominios públicos: en cada servicio → **Settings → Networking →
+   Generate Domain**. Anota ambas URLs.
+4. Configura las **variables de entorno** de cada servicio (tablas de abajo).
+   En el frontend, `FASTAPI_BASE_URL` apunta al dominio público del backend.
+5. *(Opcional, persistencia)* En el servicio backend → **Settings → Volumes →
+   New Volume**, montado en `/app/data`. SQLite guardará ahí `ecoscan.db`.
+6. Haz `git push` a `main`: Railway redespliega automáticamente.
 
-**Backend** → `backend/api/index.py`
+### Variables de entorno obligatorias en Railway
+
+**Backend** (servicio API)
 
 | Variable | Ejemplo |
 |----------|---------|
 | `SECRET_KEY` | clave larga y aleatoria para firmar los JWT |
-| `CORS_ORIGINS` | `https://tu-proyecto.vercel.app` |
-| `DATABASE_URL` | `sqlite:////tmp/ecoscan.db` (valor por defecto en Vercel) |
+| `CORS_ORIGINS` | `https://ecoscan-web.up.railway.app` (dominio del frontend) |
 | `DEBUG` | `0` en producción — es la variable del **backend**, no la del frontend |
-| `MAX_UPLOAD_MB` | `4` — Vercel corta el cuerpo de la petición en 4.5 MB |
+| `MAX_UPLOAD_MB` | `25` — debe coincidir con `MAX_UPLOAD_BYTES` del frontend |
+| `DATABASE_URL` | opcional; con volumen en `/app/data` se resuelve sola |
 
-**Frontend** → `frontend/api/index.py`
+**Frontend** (servicio Web)
 
 | Variable | Ejemplo |
 |----------|---------|
 | `DJANGO_SECRET_KEY` | debe ser **fija**: si cambia, las sesiones se invalidan |
 | `DJANGO_DEBUG` | `0` en producción. Ojo: la variable se llama `DJANGO_DEBUG`, **no** `DEBUG` |
-| `ALLOWED_HOSTS` | `.vercel.app` — **obligatorio** en cuanto `DJANGO_DEBUG=0`, si no todas las peticiones devuelven 400 `DisallowedHost` |
-| `CSRF_TRUSTED_ORIGINS` | `https://tu-proyecto.vercel.app` |
-| `FASTAPI_BASE_URL` | `https://tu-proyecto.vercel.app` |
-| `MAX_UPLOAD_BYTES` | `4194304` (4 MiB) — Vercel corta el cuerpo de la petición en 4.5 MB |
+| `ALLOWED_HOSTS` | `.up.railway.app` — **obligatorio** en cuanto `DJANGO_DEBUG=0`, si no todas las peticiones devuelven 400 `DisallowedHost` |
+| `CSRF_TRUSTED_ORIGINS` | `https://ecoscan-web.up.railway.app` |
+| `FASTAPI_BASE_URL` | `https://ecoscan-api.up.railway.app` (dominio del backend) |
+| `MAX_UPLOAD_BYTES` | `26214400` (25 MiB) — debe coincidir con `MAX_UPLOAD_MB` |
 
 ### Notas de producción
 
-- **Sistema de archivos:** solo `/tmp` es escribible. `config.py` (backend) y
-  `settings.py` (frontend) cambian la ruta de SQLite automáticamente cuando
-  detectan la variable `VERCEL`.
+- **Puerto:** Railway inyecta `PORT`; ambos contenedores escuchan en
+  `0.0.0.0:$PORT` (uvicorn en el backend, gunicorn en el frontend). No hay que
+  configurar nada.
 - **Estáticos:** WhiteNoise los sirve desde `STATICFILES_DIRS`
-  (`WHITENOISE_USE_FINDERS=True`). Si prefieres el almacenamiento comprimido con
-  manifiesto, ejecuta `bash scripts/build_vercel.sh` en el build.
-- **Modelo real:** TensorFlow no cabe en el límite de 250 MB de Vercel. Para
-  servir MobileNetV2 real, despliega el backend en un host con contenedores
-  (Render, Railway, Fly.io) con `requirements-ml.txt`.
-- **Tamaño de las fotos:** las funciones de Vercel cortan el cuerpo de la
-  petición en **4.5 MB**, así que el límite de la aplicación se fija en 4 MiB
+  (`WHITENOISE_USE_FINDERS=True`), así que la imagen no necesita
+  `collectstatic`. Si prefieres el almacenamiento comprimido con manifiesto,
+  añade `collectstatic` al Dockerfile del frontend.
+- **Modelo real:** la imagen por defecto no incluye TensorFlow para mantenerse
+  ligera. Para servir MobileNetV2 real, instala `requirements-ml.txt` en el
+  Dockerfile del backend y define `TRASHNET_MODEL_PATH` (con los pesos `.h5`
+  en un volumen). Sin él, degrada al motor heurístico.
+- **Tamaño de las fotos:** el límite de la aplicación se fija en **25 MiB**
   (`MAX_UPLOAD_MB` en el backend y `MAX_UPLOAD_BYTES` en el frontend, ambos
-  valores deben coincidir). Así el usuario recibe el mensaje de la app y no un
-  `413` del proveedor.
-- **`requirements.txt` duplicado por función:** Vercel no resuelve el include
-  `-r ../requirements.txt` (falla con `Error parsing included file`), así que
-  `backend/api/requirements.txt` y `frontend/api/requirements.txt` repiten la
-  lista de su servicio. Al tocar `backend/requirements.txt` o
-  `frontend/requirements.txt`, replica el cambio en el archivo de la función.
-- **SQLite en `/tmp` es efímero y por instancia:** los usuarios registrados se
-  pierden en cada arranque en frío y no se comparten entre instancias. Para
-  persistencia real, apunta `DATABASE_URL` a un Postgres (Neon, Supabase) y
-  añade su driver a `backend/requirements.txt`.
+  valores deben coincidir). Ajusta los dos si necesitas otro margen.
+- **SQLite y volúmenes:** sin volumen, la base de datos es efímera (se pierde
+  en cada despliegue). Monta un volumen en `/app/data` del backend para que
+  `ecoscan.db` sobreviva. Para persistencia real multi-instancia, apunta
+  `DATABASE_URL` a un Postgres (Railway lo ofrece como servicio) y añade su
+  driver a `backend/requirements.txt`.
+- **Escalado:** con más de 1 réplica del backend, SQLite por volumen deja de
+  ser válido; usa Postgres en ese escenario.
 
 ---
 
@@ -296,6 +301,7 @@ vercel --prod     # producción
 | 7 | `fix: optimizacion de respuesta, manejo de errores y ui polish` |
 | 8 | `deploy: configuracion vercel.json y pruebas finales de produccion` |
 | 9 | `fix: build de Vercel y renombrado de la app a EcoScan IA` |
+| 10 | `deploy: migracion de Vercel a Railway (Dockerfiles y railway.json)` |
 
 ## 👥 Equipo
 

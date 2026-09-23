@@ -10,11 +10,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 def _default_database_url() -> str:
     """SQLite escribible.
 
-    En Vercel el paquete desplegado es de solo lectura: el unico directorio
-    escribible es ``/tmp``. En local se usa un archivo junto al backend.
+    En Railway, si el servicio tiene un volumen montado (variable de entorno
+    ``RAILWAY_VOLUME``), la base de datos vive dentro del volumen y sobrevive
+    a los despliegues. En local se usa un archivo junto al backend.
     """
-    if os.getenv("VERCEL"):
-        return "sqlite:////tmp/ecoscan.db"
+    if os.getenv("RAILWAY_VOLUME"):
+        return "sqlite:////app/data/ecoscan.db"
     return "sqlite:///./ecoscan.db"
 
 
@@ -53,9 +54,10 @@ class Settings(BaseSettings):
     # un clasificador heuristico.
     trashnet_model_path: str = ""
     image_size: int = 224
-    # 4 MiB, alineado con MAX_UPLOAD_BYTES del frontend y con el limite de
-    # 4.5 MB del cuerpo de las funciones de Vercel.
-    max_upload_mb: int = 4
+    # 25 MiB, alineado con MAX_UPLOAD_BYTES del frontend. En Railway no hay
+    # limite de proxy tan bajo como en Vercel (4.5 MB), asi que se puede
+    # aceptar un margen mayor.
+    max_upload_mb: int = 25
     max_image_pixels: int = 4000  # redimensionado defensivo antes de inferir
 
     @property

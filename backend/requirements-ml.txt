@@ -2,9 +2,9 @@
 # Instalar SOLO en local o en un host con espacio suficiente:
 #     pip install -r requirements-ml.txt
 #
-# Vercel Serverless limita el paquete a ~250 MB descomprimido, por lo que
-# TensorFlow NO se despliega alli. Si estas dependencias no estan presentes,
-# el backend degrada automaticamente a un clasificador heuristico de respaldo
-# (ver app/ml/classifier.py) y lo informa en el campo "engine" de la respuesta.
+# La imagen Docker por defecto del backend NO las incluye para mantenerse
+# ligera. Si estas dependencias no estan presentes, el backend degrada
+# automaticamente a un clasificador heuristico de respaldo (ver
+# app/ml/classifier.py) y lo informa en el campo "engine" de la respuesta.
 
 tensorflow-cpu>=2.18

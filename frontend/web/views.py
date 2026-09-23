@@ -188,3 +188,17 @@ def bins_guide_api_view(request):
         return JsonResponse(api_client.fetch_bins_guide())
     except api_client.ApiError as exc:
         return _proxy_error(exc)
+
+
+# ---------------------------------------------------------------------------
+# Operaciones
+# ---------------------------------------------------------------------------
+
+
+def healthz_view(request):
+    """Healthcheck para el orquestador (Railway) y monitorizacion externa.
+
+    Solo comprueba que Django responda; NO contacta a FastAPI para que el
+    healthcheck no falle por una caida de un servicio ajeno.
+    """
+    return JsonResponse({"status": "ok"})

@@ -17,4 +17,6 @@ urlpatterns = [
     # --- Proxy JSON hacia FastAPI ----------------------------------------
     path("api/clasificar/", views.classify_api_view, name="classify_api"),
     path("api/guia/", views.bins_guide_api_view, name="bins_guide_api"),
+    # --- Operaciones -------------------------------------------------------
+    path("healthz", views.healthz_view, name="healthz"),
 ]

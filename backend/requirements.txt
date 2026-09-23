@@ -1,6 +1,6 @@
 # --- Backend FastAPI · Clasificador de Residuos ---------------------------
-# Dependencias livianas: aptas para el limite de tamano de Vercel Serverless
-# (< 250 MB). El modelo de deep learning es opcional, ver requirements-ml.txt.
+# Dependencias livianas: mantienen la imagen Docker del backend ligera.
+# El modelo de deep learning es opcional, ver requirements-ml.txt.
 
 # Rangos acotados: permiten reproducir el entorno sin forzar downgrades
 # cuando el sistema ya trae una version mayor de alguna libreria.
