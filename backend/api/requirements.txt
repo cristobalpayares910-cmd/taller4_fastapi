@@ -1,9 +1,25 @@
-# Vercel resuelve las dependencias desde el directorio de la funcion.
-# Se reutiliza el archivo del backend para no duplicar versiones.
+# Dependencias de la funcion Serverless. Vercel resuelve requirements.txt desde
+# el directorio de la funcion, no desde la raiz del backend.
 #
-# NOTA: TensorFlow (~600 MB) no cabe en el limite de 250 MB de las funciones
-# Serverless, por lo que el despliegue usa el clasificador heuristico de
-# respaldo. Para servir el modelo real, desplegar en un host con contenedores
-# (Render, Railway, Fly.io) e instalar requirements-ml.txt.
+# OJO: Vercel NO resuelve el include "-r ../requirements.txt" (falla con
+# "Error parsing included file"), por eso la lista esta duplicada aqui en lugar
+# de reutilizar el archivo del backend. Si cambias backend/requirements.txt,
+# replica el cambio en este archivo.
+#
+# TensorFlow (~600 MB) no cabe en el limite de las funciones Serverless, por lo
+# que el despliegue usa el clasificador heuristico de respaldo. Para servir el
+# modelo real, desplegar en un host con contenedores (Render, Railway, Fly.io)
+# e instalar requirements-ml.txt.
 
--r ../requirements.txt
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.34
+python-multipart>=0.0.20
+pydantic>=2.10,<3
+pydantic-settings>=2.7,<3
+email-validator>=2.2
+SQLAlchemy>=2.0,<3
+python-jose[cryptography]>=3.3,<4
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.1,<5
+pillow>=11.0
+numpy>=2.0

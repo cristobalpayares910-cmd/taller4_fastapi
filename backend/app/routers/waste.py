@@ -164,7 +164,7 @@ def _full_guide() -> BinsGuideResponse:
     summary="Guia de reciclaje y colores de contenedor",
     description=(
         "Devuelve las instrucciones de reciclaje asociadas a cada contenedor "
-        "del Punto Limpio, mas una ficha por familia de material. "
+        "de EcoScan IA, mas una ficha por familia de material. "
         "Endpoint publico: no requiere token."
     ),
 )

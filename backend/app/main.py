@@ -57,7 +57,7 @@ TAGS_METADATA = [
         "name": "Residuos",
         "description": (
             "Clasificacion de imagenes, historial del usuario y guia de "
-            "contenedores del Punto Limpio."
+            "contenedores de EcoScan IA."
         ),
     },
 ]

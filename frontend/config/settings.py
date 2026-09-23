@@ -1,4 +1,4 @@
-"""Configuracion de Django para el cliente web del Punto Limpio.
+"""Configuracion de Django para el cliente web de EcoScan IA.
 
 Este frontend NO procesa el modelo: solo renderiza plantillas, captura el
 stream de la camara con getUserMedia y consume la API de FastAPI.

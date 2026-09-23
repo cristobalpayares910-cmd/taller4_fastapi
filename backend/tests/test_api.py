@@ -18,7 +18,7 @@ BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BACKEND_ROOT)
 
 # Base de datos temporal y aislada para la corrida de pruebas.
-_TMP_DIR = tempfile.mkdtemp(prefix="punto-limpio-tests-")
+_TMP_DIR = tempfile.mkdtemp(prefix="ecoscan-tests-")
 os.environ["DATABASE_URL"] = f"sqlite:///{os.path.join(_TMP_DIR, 'test.db')}"
 os.environ["SECRET_KEY"] = "clave-solo-para-pruebas"
 

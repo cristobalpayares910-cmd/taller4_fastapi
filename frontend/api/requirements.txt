@@ -1,3 +1,11 @@
-# Vercel resuelve las dependencias desde el directorio de la funcion.
-# Se reutiliza el archivo del frontend para no duplicar versiones.
--r ../requirements.txt
+# Dependencias de la funcion Serverless. Vercel resuelve requirements.txt desde
+# el directorio de la funcion, no desde la raiz del frontend.
+#
+# OJO: Vercel NO resuelve el include "-r ../requirements.txt" (falla con
+# "Error parsing included file"), por eso la lista esta duplicada aqui en lugar
+# de reutilizar el archivo del frontend. Si cambias frontend/requirements.txt,
+# replica el cambio en este archivo.
+
+Django>=5.1,<7.0
+whitenoise>=6.8
+httpx>=0.28

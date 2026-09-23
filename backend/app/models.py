@@ -13,7 +13,7 @@ def _utcnow() -> datetime:
 
 
 class User(Base):
-    """Usuario registrado en el Punto Limpio."""
+    """Usuario registrado en EcoScan IA."""
 
     __tablename__ = "users"
 

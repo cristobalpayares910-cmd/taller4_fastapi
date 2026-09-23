@@ -1,1 +1,1 @@
-"""Aplicacion web del Punto Limpio (vistas, plantillas y consumo de API)."""
+"""Aplicacion web de EcoScan IA (vistas, plantillas y consumo de API)."""

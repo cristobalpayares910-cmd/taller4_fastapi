@@ -1,4 +1,4 @@
-# Taller 4 — Clasificador de Residuos en Punto Limpio 🗑️♻️
+# EcoScan IA — Clasificador de Residuos 🗑️♻️
 
 Aplicación web que **clasifica residuos a partir de una fotografía** tomada con
 la cámara del dispositivo y responde con la categoría, el tipo de residuo y el
@@ -148,7 +148,7 @@ curl -X POST http://127.0.0.1:8001/api/v1/classify-waste \
 }
 ```
 
-### Esquema de colores (Punto Limpio)
+### Esquema de colores (EcoScan IA)
 
 | Color | Categoría | Acepta |
 |-------|-----------|--------|
@@ -230,7 +230,7 @@ vercel --prod     # producción
 |----------|---------|
 | `SECRET_KEY` | clave larga y aleatoria para firmar los JWT |
 | `CORS_ORIGINS` | `https://tu-proyecto.vercel.app` |
-| `DATABASE_URL` | `sqlite:////tmp/punto_limpio.db` (valor por defecto en Vercel) |
+| `DATABASE_URL` | `sqlite:////tmp/ecoscan.db` (valor por defecto en Vercel) |
 | `DEBUG` | `0` en producción — es la variable del **backend**, no la del frontend |
 | `MAX_UPLOAD_MB` | `4` — Vercel corta el cuerpo de la petición en 4.5 MB |
 
@@ -261,6 +261,11 @@ vercel --prod     # producción
   (`MAX_UPLOAD_MB` en el backend y `MAX_UPLOAD_BYTES` en el frontend, ambos
   valores deben coincidir). Así el usuario recibe el mensaje de la app y no un
   `413` del proveedor.
+- **`requirements.txt` duplicado por función:** Vercel no resuelve el include
+  `-r ../requirements.txt` (falla con `Error parsing included file`), así que
+  `backend/api/requirements.txt` y `frontend/api/requirements.txt` repiten la
+  lista de su servicio. Al tocar `backend/requirements.txt` o
+  `frontend/requirements.txt`, replica el cambio en el archivo de la función.
 - **SQLite en `/tmp` es efímero y por instancia:** los usuarios registrados se
   pierden en cada arranque en frío y no se comparten entre instancias. Para
   persistencia real, apunta `DATABASE_URL` a un Postgres (Neon, Supabase) y
@@ -290,6 +295,7 @@ vercel --prod     # producción
 | 6 | `feat: integracion http entre cliente django y servidor fastapi` |
 | 7 | `fix: optimizacion de respuesta, manejo de errores y ui polish` |
 | 8 | `deploy: configuracion vercel.json y pruebas finales de produccion` |
+| 9 | `fix: build de Vercel y renombrado de la app a EcoScan IA` |
 
 ## 👥 Equipo
 

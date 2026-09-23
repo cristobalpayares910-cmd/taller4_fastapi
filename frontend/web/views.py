@@ -1,4 +1,4 @@
-"""Vistas del cliente web del Punto Limpio."""
+"""Vistas del cliente web de EcoScan IA."""
 
 import logging
 

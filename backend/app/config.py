@@ -14,8 +14,8 @@ def _default_database_url() -> str:
     escribible es ``/tmp``. En local se usa un archivo junto al backend.
     """
     if os.getenv("VERCEL"):
-        return "sqlite:////tmp/punto_limpio.db"
-    return "sqlite:///./punto_limpio.db"
+        return "sqlite:////tmp/ecoscan.db"
+    return "sqlite:///./ecoscan.db"
 
 
 class Settings(BaseSettings):
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     )
 
     # --- Aplicacion -------------------------------------------------------
-    app_name: str = "Punto Limpio API"
+    app_name: str = "EcoScan IA API"
     app_version: str = "1.0.0"
     api_prefix: str = "/api/v1"
     debug: bool = True
