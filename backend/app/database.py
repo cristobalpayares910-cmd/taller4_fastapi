@@ -1,6 +1,7 @@
 """Configuracion de SQLAlchemy 2.x (engine, sesion y Base declarativa)."""
 
 import logging
+import re
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
@@ -11,6 +12,11 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from app.config import settings, sqlite_file_path
 
 logger = logging.getLogger(__name__)
+
+
+def _masked_url(url: str) -> str:
+    """Oculta la contrasena de URLs con credenciales (p. ej. Postgres)."""
+    return re.sub(r"://([^:/@]+):([^@]+)@", r"://\1:***@", url)
 
 
 def _make_engine(url: str):
@@ -67,6 +73,7 @@ def prepare_database() -> None:
     global engine, SessionLocal
 
     url = settings.database_url
+    logger.info("Base de datos configurada: %s", _masked_url(url))
     if not _can_write_sqlite_file(url):
         for fallback in (
             Path("data") / "ecoscan.db",
