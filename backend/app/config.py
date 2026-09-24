@@ -2,6 +2,7 @@
 
 import os
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,12 +11,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 def _default_database_url() -> str:
     """SQLite escribible.
 
-    En Railway, si el servicio tiene un volumen montado (variable de entorno
-    ``RAILWAY_VOLUME``), la base de datos vive dentro del volumen y sobrevive
-    a los despliegues. En local se usa un archivo junto al backend.
+    En Railway, si el servicio tiene un volumen montado, la base de datos vive
+    dentro del volumen y sobrevive a los despliegues. Railway inyecta la ruta
+    del volumen en ``RAILWAY_VOLUME_MOUNT_PATH``; antes se leia
+    ``RAILWAY_VOLUME``, variable que Railway no define, de modo que la
+    deteccion nunca se activaba y la base quedaba en una ruta efimera.
+
+    En local se usa un archivo junto al backend.
     """
-    if os.getenv("RAILWAY_VOLUME"):
-        return "sqlite:////app/data/ecoscan.db"
+    mount_path = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    if mount_path:
+        # as_posix() mantiene las barras normales tambien en Windows.
+        # 4 barras: sqlite:// + ruta absoluta (/app/data/ecoscan.db).
+        return f"sqlite:///{(Path(mount_path) / 'ecoscan.db').as_posix()}"
     return "sqlite:///./ecoscan.db"
 
 

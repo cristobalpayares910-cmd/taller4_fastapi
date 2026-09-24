@@ -44,6 +44,21 @@ def env_list(name: str, default: str = "") -> list[str]:
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-key-taller4")
 DEBUG = env_bool("DJANGO_DEBUG", True)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "*" if DEBUG else "localhost,127.0.0.1")
+
+# Railway ejecuta el healthcheck del railway.json con el host
+# "healthcheck.railway.app" (y desde 127.0.0.1), no con el dominio publico. Si
+# Django los rechaza devuelve 400, el healthcheck no pasa nunca y el dominio
+# acaba respondiendo "Application failed to respond".
+for _healthcheck_host in ("healthcheck.railway.app", "127.0.0.1", "localhost"):
+    if _healthcheck_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_healthcheck_host)
+
+# Dominio publico que Railway inyecta en el servicio con dominio propio: evita
+# depender de que ALLOWED_HOSTS se haya escrito completo a mano.
+_railway_public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+if _railway_public_domain and _railway_public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_public_domain)
+
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "")
 
 # La sesion firmada en cookie evita depender de una base de datos: el estado
@@ -99,7 +114,11 @@ ASGI_APPLICATION = "config.asgi.application"
 # FastAPI y la sesion en una cookie firmada. Se mantiene SQLite solo para
 # completar la configuracion. En Railway, si hay volumen montado, la base
 # vive dentro de el y sobrevive a los despliegues.
-_DB_DIR = Path("/app/data") if os.getenv("RAILWAY_VOLUME") else BASE_DIR
+#
+# Railway expone la ruta del volumen en RAILWAY_VOLUME_MOUNT_PATH (no en
+# RAILWAY_VOLUME, que no define, y por eso la deteccion nunca se activaba).
+_volume_mount = os.getenv("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+_DB_DIR = Path(_volume_mount) if _volume_mount else BASE_DIR
 
 DATABASES = {
     "default": {
