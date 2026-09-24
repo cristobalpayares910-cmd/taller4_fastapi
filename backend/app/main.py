@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, prepare_database
 from app.errors import register_exception_handlers
 from app.middleware import ProcessTimeMiddleware, StaticCacheMiddleware
 from app.ml import get_classifier
@@ -66,6 +66,7 @@ TAGS_METADATA = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Prepara base de datos y modelo antes de aceptar trafico."""
+    prepare_database()
     init_db()
     try:
         get_classifier().warm_up()

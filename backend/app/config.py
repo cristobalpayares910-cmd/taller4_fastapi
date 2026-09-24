@@ -4,8 +4,42 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def sqlite_file_path(database_url: str) -> Path | None:
+    """Extrae la ruta del archivo de una URL sqlite, o None si no aplica.
+
+    Cubre las variantes de SQLAlchemy: ``sqlite:///ruta/relativa``,
+    ``sqlite:///C:\ruta`` (Windows), ``sqlite:////ruta/absoluta`` y
+    ``sqlite://`` (base en memoria).
+    """
+    prefix = "sqlite:///"
+    if not database_url.startswith(prefix):
+        return None
+    path = database_url[len(prefix) :]
+    if not path or path == ":memory:":
+        return None
+    return Path(path)
+
+
+def _ensure_sqlite_parent_dir(database_url: str) -> None:
+    """Crea el directorio padre del archivo SQLite si falta.
+
+    SQLAlchemy/SQLite no crean directorios: si ``DATABASE_URL`` apunta a una
+    carpeta inexistente (p. ej. un volumen no montado todavia), la conexion
+    falla con "unable to open database file" y el servicio entra en crash-loop.
+    Si el directorio no se puede crear (sistema de archivos de solo lectura),
+    se deja que SQLite reporte el error original.
+    """
+    db_file = sqlite_file_path(database_url)
+    if db_file is None:
+        return
+    try:
+        db_file.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 
 def _default_database_url() -> str:
@@ -51,6 +85,14 @@ class Settings(BaseSettings):
 
     # --- Base de datos ----------------------------------------------------
     database_url: str = Field(default_factory=_default_database_url)
+
+    @field_validator("database_url")
+    @classmethod
+    def _prepare_sqlite_location(cls, value: str) -> str:
+        """Garantiza que la ruta SQLite sea abrible antes de conectar."""
+        value = os.path.expanduser(value)
+        _ensure_sqlite_parent_dir(value)
+        return value
 
     # --- CORS -------------------------------------------------------------
     cors_origins: str = "http://127.0.0.1:8000,http://localhost:8000"
