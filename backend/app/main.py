@@ -19,6 +19,13 @@ from app.middleware import ProcessTimeMiddleware, StaticCacheMiddleware
 from app.ml import get_classifier
 from app.routers import auth, waste
 
+# Sin esto, uvicorn solo muestra sus propios logs: los warnings del app
+# (fallback de base de datos, fallos del modelo) no llegarian a Railway.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:%(name)s:%(message)s",
+)
+
 logger = logging.getLogger(__name__)
 
 DESCRIPTION = """
