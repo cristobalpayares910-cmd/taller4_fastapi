@@ -7,6 +7,17 @@ la cámara del dispositivo y responde con la categoría, el tipo de residuo y el
 - **Problema real:** mala separación de basura en la fuente por desconocimiento del usuario.
 - **Modelo preentrenado:** MobileNetV2 (ImageNet / TrashNet).
 
+## 🌐 Demo en producción
+
+| Servicio | URL |
+|----------|-----|
+| 📷 App web — Clasificar | <https://frontend-production-5b4e2.up.railway.app/clasificar/> |
+| ⚙️ API FastAPI | <https://backend-production-10325.up.railway.app/> |
+
+> 💡 La documentación interactiva de la API (Swagger) está en
+> <https://backend-production-10325.up.railway.app/docs> y el healthcheck en
+> [`/health`](https://backend-production-10325.up.railway.app/health).
+
 ---
 
 ## 🧱 Stack
